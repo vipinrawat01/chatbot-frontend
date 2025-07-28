@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 API Diagnosis - Chatbot Backend Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #e74c3c; }
+        .test-section {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        .result {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success { border-left-color: #28a745; }
+        .error { border-left-color: #dc3545; }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .status.online { background: #d4edda; color: #155724; }
+        .status.offline { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Django Backend Diagnosis</h1>
+        <p><strong>Chatbot ID:</strong> chatbot_1753116094357</p>
+        <p><strong>Backend:</strong> http://localhost:8000</p>
+        
+        <div id="status" class="status">Testing connection...</div>
+
+        <div class="test-section">
+            <h3>🧪 Test 1: Django Server Status</h3>
+            <button onclick="testDjangoServer()">Test Django Homepage</button>
+            <div id="django-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 Test 2: Widget Script</h3>
+            <button onclick="testWidgetScript()">Test Widget Script Loading</button>
+            <div id="widget-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 Test 3: Chatbot Configuration API</h3>
+            <button onclick="testChatbotAPI()">Test Chatbot Config Endpoint</button>
+            <div id="api-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 Test 4: Create Test Chatbot</h3>
+            <button onclick="createTestChatbot()">Create Test Chatbot via API</button>
+            <div id="create-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 Test 5: List All Chatbots</h3>
+            <button onclick="listChatbots()">List All Chatbots</button>
+            <div id="list-result" class="result"></div>
+        </div>
+
+        <div class="test-section error" id="solution" style="display:none;">
+            <h3>🔧 Solution</h3>
+            <div id="solution-text"></div>
+        </div>
+    </div>
+
+    <script>
+        // Test Django server homepage
+        async function testDjangoServer() {
+            const result = document.getElementById('django-result');
+            result.textContent = 'Testing Django server...';
+            
+            try {
+                const response = await fetch('http://localhost:8000/');
+                if (response.ok) {
+                    const text = await response.text();
+                    result.textContent = `✅ SUCCESS: Django server is running\nStatus: ${response.status}\nResponse contains: ${text.substring(0, 100)}...`;
+                    document.getElementById('status').className = 'status online';
+                    document.getElementById('status').textContent = '✅ Django server is ONLINE';
+                } else {
+                    result.textContent = `❌ ERROR: Django server responded with status ${response.status}`;
+                    document.getElementById('status').className = 'status offline';
+                    document.getElementById('status').textContent = '❌ Django server is having issues';
+                }
+            } catch (error) {
+                result.textContent = `❌ ERROR: Cannot connect to Django server\nError: ${error.message}`;
+                document.getElementById('status').className = 'status offline';
+                document.getElementById('status').textContent = '❌ Django server is OFFLINE - Is it running?';
+                showSolution('Django server is not running. Start it with: python manage.py runserver localhost:8000');
+            }
+        }
+
+        // Test widget script
+        async function testWidgetScript() {
+            const result = document.getElementById('widget-result');
+            result.textContent = 'Testing widget script...';
+            
+            try {
+                const response = await fetch('http://localhost:8000/embed/v1/aiq-chat-widget.js');
+                if (response.ok) {
+                    const script = await response.text();
+                    result.textContent = `✅ SUCCESS: Widget script is loading\nScript size: ${script.length} characters\nContains: ${script.substring(0, 100)}...`;
+                } else {
+                    result.textContent = `❌ ERROR: Widget script endpoint returned status ${response.status}`;
+                }
+            } catch (error) {
+                result.textContent = `❌ ERROR: Cannot load widget script\nError: ${error.message}`;
+            }
+        }
+
+        // Test chatbot API
+        async function testChatbotAPI() {
+            const result = document.getElementById('api-result');
+            const chatbotId = 'chatbot_1753116094357';
+            result.textContent = `Testing chatbot API for ID: ${chatbotId}...`;
+            
+            try {
+                const response = await fetch(`http://localhost:8000/api/chatbot-instances/${chatbotId}/public-config`);
+                if (response.ok) {
+                    const config = await response.json();
+                    result.textContent = `✅ SUCCESS: Chatbot configuration found!\n${JSON.stringify(config, null, 2)}`;
+                } else if (response.status === 404) {
+                    result.textContent = `❌ ERROR: Chatbot not found (404)\nThis means the chatbot ID ${chatbotId} doesn't exist in the database.\n\nPossible causes:\n1. Database tables not created (no migrations run)\n2. Chatbot wasn't saved from frontend\n3. Wrong chatbot ID`;
+                    showSolution('The chatbot configuration is not in the database. Either:\n1. Run Django migrations: python manage.py makemigrations && python manage.py migrate\n2. Check if the chatbot was saved from the frontend\n3. Create a test chatbot using the button below');
+                } else {
+                    result.textContent = `❌ ERROR: API returned status ${response.status}\nResponse: ${await response.text()}`;
+                }
+            } catch (error) {
+                result.textContent = `❌ ERROR: Cannot connect to chatbot API\nError: ${error.message}`;
+            }
+        }
+
+        // Create test chatbot
+        async function createTestChatbot() {
+            const result = document.getElementById('create-result');
+            result.textContent = 'Creating test chatbot...';
+            
+            const testChatbot = {
+                id: 'chatbot_1753116094357',
+                name: 'Test Chatbot',
+                type: 'FLOATING_WIDGET',
+                position: 'bottom-right',
+                size: 'medium',
+                headerText: 'Test Chat',
+                headerColor: '#10B981',
+                userBubbleColor: '#3B82F6',
+                botBubbleColor: '#F3F4F6',
+                backgroundColor: '#FFFFFF',
+                fontFamily: 'Inter, sans-serif',
+                borderRadius: 12,
+                bubbleRadius: 24,
+                introMessage: 'Hello! I am a test chatbot created via API.',
+                welcomeMessage: 'Hello! I am a test chatbot created via API.',
+                icon: '🤖',
+                branding: {
+                    enabled: true,
+                    text: 'Powered by Test',
+                    link: ''
+                },
+                gradients: {
+                    header: true,
+                    userBubble: false,
+                    agentBubble: false,
+                    launcher: true
+                }
+            };
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/chatbot-instances/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testChatbot)
+                });
+                
+                if (response.ok) {
+                    const created = await response.json();
+                    result.textContent = `✅ SUCCESS: Test chatbot created!\n${JSON.stringify(created, null, 2)}`;
+                } else {
+                    const errorText = await response.text();
+                    result.textContent = `❌ ERROR: Failed to create chatbot\nStatus: ${response.status}\nResponse: ${errorText}`;
+                }
+            } catch (error) {
+                result.textContent = `❌ ERROR: Cannot create chatbot\nError: ${error.message}`;
+            }
+        }
+
+        // List all chatbots
+        async function listChatbots() {
+            const result = document.getElementById('list-result');
+            result.textContent = 'Listing all chatbots...';
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/chatbot-instances/');
+                if (response.ok) {
+                    const data = await response.json();
+                    result.textContent = `✅ SUCCESS: Found ${data.count} chatbot(s)\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    result.textContent = `❌ ERROR: Cannot list chatbots\nStatus: ${response.status}`;
+                }
+            } catch (error) {
+                result.textContent = `❌ ERROR: Cannot connect to list API\nError: ${error.message}`;
+            }
+        }
+
+        function showSolution(text) {
+            document.getElementById('solution').style.display = 'block';
+            document.getElementById('solution-text').textContent = text;
+        }
+
+        // Auto-test on load
+        window.onload = function() {
+            testDjangoServer();
+        };
+    </script>
+</body>
+</html> 

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Chatbot Test - 2 Line Integration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: #f5f5f5;
+        }
+        .demo-box {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .code-snippet {
+            background: #2d3748;
+            color: #68d391;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-line;
+            margin: 20px 0;
+        }
+        .highlight {
+            background: #fef5e7;
+            padding: 20px;
+            border-left: 4px solid #f6ad55;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        h1 { color: #2d3748; }
+        h2 { color: #4a5568; }
+    </style>
+</head>
+<body>
+    <h1>🎯 Clean 2-Line Chatbot Integration Test</h1>
+    
+    <div class="demo-box">
+        <h2>What You See vs What You Code</h2>
+        <p><strong>What you need to add to your website:</strong></p>
+        <div class="code-snippet">&lt;div id="agentive_embedded" data-chatbot-id="chatbot_1753036067821" data-widget-type="embedded"&gt;&lt;/div&gt;
+&lt;script async src="http://localhost:5173/embed/v1/aiq-chat-widget.js"&gt;&lt;/script&gt;</div>
+        
+        <p><strong>That's it! Just 2 lines of code.</strong></p>
+    </div>
+
+    <div class="demo-box">
+        <h2>🚀 How It Works</h2>
+        <ol>
+            <li><strong>You design your chatbot</strong> in the ChatBot Pro interface</li>
+            <li><strong>You get a unique chatbot ID</strong> (like: chatbot_1753036067821)</li>
+            <li><strong>You paste 2 lines</strong> of code on any website</li>
+            <li><strong>The script automatically loads</strong> your chatbot settings from the server</li>
+            <li><strong>When you update settings</strong> in ChatBot Pro, ALL websites update automatically!</li>
+        </ol>
+    </div>
+
+    <div class="highlight">
+        <h2>✨ The Magic</h2>
+        <p><strong>Dynamic Loading:</strong> The widget script fetches your chatbot configuration from our servers using your unique chatbot ID. This means:</p>
+        <ul>
+            <li>✅ Change colors, messages, or settings in your dashboard</li>
+            <li>✅ All websites using this chatbot ID update instantly</li>
+            <li>✅ No need to update code on multiple websites</li>
+            <li>✅ Create different chatbots for different websites</li>
+            <li>✅ Manage everything from one central location</li>
+        </ul>
+    </div>
+
+    <div class="demo-box">
+        <h2>🎭 Test Komal's Chatbot</h2>
+        <p>Look in the bottom-right corner for Komal's chatbot with:</p>
+        <ul>
+            <li><strong>Theater mask icon</strong> 🎭</li>
+            <li><strong>Orange header</strong> and pink user bubbles</li>
+            <li><strong>Welcome message:</strong> "hello lovelyyy"</li>
+            <li><strong>Branding:</strong> "Powered by Komal" linking to Amazon</li>
+        </ul>
+        <p><em>All these settings were loaded automatically using just the chatbot ID!</em></p>
+    </div>
+
+    <div class="demo-box">
+        <h2>🔄 Multiple Website Scenario</h2>
+        <p><strong>Website A:</strong> Uses chatbot_1753036067821 (Komal's theater chatbot)</p>
+        <p><strong>Website B:</strong> Uses chatbot_9876543210 (Different design/colors)</p>
+        <p><strong>Website C:</strong> Uses chatbot_1357924680 (Corporate style)</p>
+        
+        <p>Same 2 lines of code, just different chatbot IDs. Each loads completely different designs and settings!</p>
+    </div>
+
+    <!-- The actual clean integration code -->
+    <div id="agentive_embedded" data-chatbot-id="chatbot_1753036067821" data-widget-type="embedded"></div>
+    <script>
+        // Mock widget loader - simulates the real aiq-chat-widget.js
+        (function() {
+            console.log('🎭 Loading chatbot configuration for ID: chatbot_1753036067821');
+            
+            // Simulate API call to fetch chatbot settings
+            setTimeout(function() {
+                const container = document.querySelector('[data-chatbot-id="chatbot_1753036067821"]');
+                if (!container) return;
+
+                // Mock: This would normally be fetched from your API
+                const chatbotConfig = {
+                    botName: "komal",
+                    welcomeMessage: "hello lovelyyy",
+                    primaryColor: "#FF8A65",
+                    userBubbleColor: "#E91E63",
+                    icon: "🎭",
+                    branding: "Powered by Komal → Amazon"
+                };
+
+                console.log('✅ Configuration loaded:', chatbotConfig);
+
+                // Create chatbot with loaded settings
+                container.innerHTML = `
+                    <div style="
+                        position: fixed;
+                        bottom: 20px;
+                        right: 20px;
+                        width: 320px;
+                        height: 450px;
+                        background: white;
+                        border-radius: 12px;
+                        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                        z-index: 9999;
+                        display: flex;
+                        flex-direction: column;
+                        overflow: hidden;
+                        border: 1px solid #e2e8f0;
+                    ">
+                        <div style="background: ${chatbotConfig.primaryColor}; color: white; padding: 15px; font-weight: bold; display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 1.2em;">${chatbotConfig.icon}</span>
+                            <div>
+                                <div>${chatbotConfig.botName}</div>
+                                <div style="font-size: 0.8em; opacity: 0.9;">Settings auto-loaded ✨</div>
+                            </div>
+                        </div>
+                        <div style="flex: 1; padding: 20px; background: #f8f9fa;">
+                            <div style="background: #e3f2fd; color: #1976d2; padding: 12px; border-radius: 18px; margin-bottom: 15px;">
+                                ${chatbotConfig.welcomeMessage}
+                            </div>
+                            <div style="text-align: center; color: #666; font-size: 0.8em; margin: 15px 0; padding: 10px; background: white; border-radius: 8px;">
+                                🎯 Configuration loaded from ChatBot Pro<br/>
+                                ID: chatbot_1753036067821
+                            </div>
+                        </div>
+                        <div style="padding: 15px; background: #f1f5f9; display: flex; gap: 10px; align-items: center;">
+                            <input type="text" placeholder="Type your message..." style="flex: 1; padding: 10px; border: 1px solid #cbd5e0; border-radius: 20px; outline: none;">
+                            <div style="width: 40px; height: 40px; background: ${chatbotConfig.userBubbleColor}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; cursor: pointer;">➤</div>
+                        </div>
+                        <div style="text-align: center; padding: 8px; font-size: 0.7em; color: #999; background: #f8f9fa;">
+                            ${chatbotConfig.branding}
+                        </div>
+                    </div>
+                `;
+            }, 500);
+        })();
+    </script>
+</body>
+</html> 

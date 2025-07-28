@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: chatbot-frontend
+    env: static
+    buildCommand: npm run build
+    staticPublishPath: ./build
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://chatbot-npll.onrender.com
+      - key: REACT_APP_ENVIRONMENT
+        value: production 

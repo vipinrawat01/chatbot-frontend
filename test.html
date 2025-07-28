@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preview-Identical Chatbot Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            text-align: center;
+        }
+        h1 { color: #FFD700; margin-bottom: 20px; }
+        .instructions {
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .code {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            margin: 10px 0;
+            word-break: break-all;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            background: rgba(40, 167, 69, 0.2);
+            border: 1px solid #28a745;
+            border-radius: 20px;
+            color: #28a745;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Preview-Identical Chatbot System</h1>
+        
+        <div class="status">✅ Testing Live Integration</div>
+        
+        <div class="instructions">
+            <h2>🚀 What's Happening:</h2>
+            <p>This page demonstrates the new system where your deployed chatbot looks <strong>exactly</strong> like your preview!</p>
+            
+            <h3>🔧 Technical Details:</h3>
+            <ul>
+                <li><strong>Same Styling Logic:</strong> Uses identical code to ChatbotPreview.tsx</li>
+                <li><strong>Database Integration:</strong> Loads your design from Django database</li>
+                <li><strong>Dynamic Configuration:</strong> All colors, effects, and settings applied</li>
+                <li><strong>Real-time Updates:</strong> Change design → see changes everywhere</li>
+            </ul>
+            
+            <h3>📝 Integration Code:</h3>
+            <div class="code">
+&lt;div id="agentive_floating" data-chatbot-id="chatbot_1753121670169" data-widget-type="floating"&gt;&lt;/div&gt;<br/>
+&lt;script async src="http://localhost:8000/embed/v1/aiq-chat-widget.js"&gt;&lt;/script&gt;
+            </div>
+            
+            <p><strong>Just 2 lines!</strong> The widget script dynamically loads your exact design configuration from the database and renders it with the same styling functions as your preview.</p>
+        </div>
+        
+        <p style="margin-top: 30px; opacity: 0.8;">
+            <strong>🎨 Your chatbot should appear in the bottom-right corner with your exact design!</strong><br/>
+            If you don't see it, make sure Django server is running and the database has your chatbot.
+        </p>
+    </div>
+
+    <!-- Your Chatbot Integration (REPLACE CHATBOT ID WITH YOURS) -->
+    <div id="agentive_floating" data-chatbot-id="chatbot_1753121670169" data-widget-type="floating"></div>
+    <script async src="http://localhost:8000/embed/v1/aiq-chat-widget.js"></script>
+
+</body>
+</html>
