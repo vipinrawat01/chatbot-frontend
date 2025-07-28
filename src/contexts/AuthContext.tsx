@@ -1,6 +1,9 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getApiUrl } from '../lib/config';
+
+// API configuration
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://chatbot-npll.onrender.com';
+const getApiUrl = (endpoint: string) => `${API_BASE_URL}${endpoint}`;
 
 interface User {
   id: number;

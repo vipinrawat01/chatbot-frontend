@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { getApiUrl } from '../lib/config';
+
+// API configuration
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://chatbot-npll.onrender.com';
+const getApiUrl = (endpoint: string) => `${API_BASE_URL}${endpoint}`;
 import Layout from '@/components/layout/Layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';

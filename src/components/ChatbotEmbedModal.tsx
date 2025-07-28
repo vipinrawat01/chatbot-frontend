@@ -1,7 +1,10 @@
 "use client";
 
 import React, { useState } from 'react';
-import { getApiUrl } from '../lib/config';
+
+// API configuration
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://chatbot-npll.onrender.com';
+const getApiUrl = (endpoint: string) => `${API_BASE_URL}${endpoint}`;
 import { Copy, Check, X, Code, ExternalLink, Globe, FileText, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
