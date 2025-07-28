@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import { getApiUrl } from '../lib/config';
 import { Copy, Check, X, Code, ExternalLink, Globe, FileText, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -32,7 +33,7 @@ export default function ChatbotEmbedModal({
   isOpen, 
   onClose, 
   chatbotData,
-  appUrl = 'http://localhost:8000'
+      appUrl = getApiUrl('')
 }: ChatbotEmbedModalProps) {
   const [selectedTab, setSelectedTab] = useState<'html' | 'react' | 'wordpress' | 'nextjs'>('html');
   const { toast } = useToast();

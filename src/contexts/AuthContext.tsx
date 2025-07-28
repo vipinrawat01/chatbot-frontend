@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { getApiUrl } from '../lib/config';
 
 interface User {
   id: number;
@@ -32,7 +33,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const checkCurrentUser = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/auth/current-user/', {
+      const response = await fetch(getApiUrl('/api/auth/current-user/'), {
         credentials: 'include' // Include cookies for session
       });
       
@@ -59,7 +60,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
-      const response = await fetch('http://localhost:8000/api/auth/login/', {
+      const response = await fetch(getApiUrl('/api/auth/login/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -88,7 +89,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signup = async (username: string, password: string, email?: string): Promise<boolean> => {
     try {
-      const response = await fetch('http://localhost:8000/api/auth/register/', {
+      const response = await fetch(getApiUrl('/api/auth/register/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -115,7 +116,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
-      await fetch('http://localhost:8000/api/auth/logout/', {
+      await fetch(getApiUrl('/api/auth/logout/'), {
         method: 'POST',
         credentials: 'include'
       });

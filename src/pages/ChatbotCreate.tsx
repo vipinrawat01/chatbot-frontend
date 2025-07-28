@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getApiUrl } from '../lib/config';
 import Layout from '@/components/layout/Layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -112,7 +113,7 @@ const ChatbotCreate = () => {
     setLoadingAgents(true);
     console.log('🤖 Fetching agents for chatbot creation...');
     try {
-      const response = await fetch('http://localhost:8000/api/agents/for-selection/', {
+              const response = await fetch(getApiUrl('/api/agents/for-selection/'), {
         credentials: 'include',
         headers: {
           'Accept': 'application/json',
@@ -171,7 +172,7 @@ const ChatbotCreate = () => {
     setLoading(true);
     try {
       // Try to load from API first
-      const response = await fetch(`http://localhost:8000/api/chatbot-instances/${chatbotId}/`, {
+              const response = await fetch(getApiUrl(`/api/chatbot-instances/${chatbotId}/`), {
         credentials: 'include' // Include authentication cookies
       });
       if (response.ok) {
@@ -523,7 +524,7 @@ const ChatbotCreate = () => {
       if (response.ok) {
         // Update existing chatbot
         console.log('📝 Updating existing chatbot...');
-        apiResponse = await fetch(`http://localhost:8000/api/chatbot-instances/${botSettings.id}/`, {
+        apiResponse = await fetch(getApiUrl(`/api/chatbot-instances/${botSettings.id}/`), {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -535,7 +536,7 @@ const ChatbotCreate = () => {
         // Create new chatbot
         console.log('✨ Creating new chatbot...');
         console.log('📋 Chatbot data:', chatbotData);
-        apiResponse = await fetch('http://localhost:8000/api/chatbot-instances/', {
+        apiResponse = await fetch(getApiUrl('/api/chatbot-instances/'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -654,7 +655,7 @@ const ChatbotCreate = () => {
 
       // Check if chatbot exists (update) or create new
       console.log('🔍 Checking if chatbot exists:', botSettings.id);
-      const response = await fetch(`http://localhost:8000/api/chatbot-instances/${botSettings.id}/`, {
+      const response = await fetch(getApiUrl(`/api/chatbot-instances/${botSettings.id}/`), {
         credentials: 'include' // Include authentication cookies
       });
       console.log('📡 Check response:', response.status, response.ok);
@@ -663,7 +664,7 @@ const ChatbotCreate = () => {
       if (response.ok) {
         // Update existing chatbot
         console.log('📝 Updating existing chatbot...');
-        apiResponse = await fetch(`http://localhost:8000/api/chatbot-instances/${botSettings.id}/`, {
+        apiResponse = await fetch(getApiUrl(`/api/chatbot-instances/${botSettings.id}/`), {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -675,7 +676,7 @@ const ChatbotCreate = () => {
         // Create new chatbot
         console.log('✨ Creating new chatbot...');
         console.log('📋 Chatbot data:', chatbotData);
-        apiResponse = await fetch('http://localhost:8000/api/chatbot-instances/', {
+        apiResponse = await fetch(getApiUrl('/api/chatbot-instances/'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -737,7 +738,7 @@ const ChatbotCreate = () => {
     const widgetType = botSettings.type === 'FLOATING_WIDGET' ? 'floating' : 'embedded';
     
     return `<div id="${containerId}" data-chatbot-id="${botSettings.id}" data-widget-type="${widgetType}"></div>
-<script async src="http://localhost:8000/embed/v1/aiq-chat-widget.js"></script>`;
+<script async src="${getApiUrl('/embed/v1/aiq-chat-widget.js')}"></script>`;
   };
 
   const copyToClipboard = async (text: string) => {

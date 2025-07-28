@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { getApiUrl } from '../lib/config';
 import Layout from '@/components/layout/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -48,7 +49,7 @@ const Chatbots = () => {
     try {
       setError(null);
       console.log('Loading chatbots from API...');
-      const response = await fetch('http://localhost:8000/api/chatbot-instances/', {
+      const response = await fetch(getApiUrl('/api/chatbot-instances/'), {
         credentials: 'include' // Include cookies for authentication
       });
       console.log('API Response status:', response.status);
@@ -103,7 +104,7 @@ const Chatbots = () => {
   };
 
   const generateCodeSnippet = (chatbotId: string) => {
-    return `<div id="agentive_floating" data-chatbot-id="${chatbotId}" data-widget-type="floating"></div>\n<script async src="http://localhost:8000/embed/v1/aiq-chat-widget.js"></script>`;
+          return `<div id="agentive_floating" data-chatbot-id="${chatbotId}" data-widget-type="floating"></div>\n<script async src="${getApiUrl('/embed/v1/aiq-chat-widget.js')}"></script>`;
   };
 
   const copyCode = async (chatbotId: string) => {
@@ -128,7 +129,7 @@ const Chatbots = () => {
     if (!confirm('Are you sure you want to delete this chatbot?')) return;
     
     try {
-      const response = await fetch(`http://localhost:8000/api/chatbot-instances/${chatbotId}/`, {
+              const response = await fetch(getApiUrl(`/api/chatbot-instances/${chatbotId}/`), {
         method: 'DELETE',
         credentials: 'include' // Include cookies for authentication
       });

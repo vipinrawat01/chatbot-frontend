@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getApiUrl } from '../lib/config';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import Layout from '../components/layout/Layout';
@@ -75,7 +76,7 @@ const AdminAgents: React.FC = () => {
   const verifyAuthAndFetchAgents = async () => {
     try {
       // First check if we're authenticated
-      const authResponse = await fetch('http://localhost:8000/api/auth/current-user/', {
+      const authResponse = await fetch(getApiUrl('/api/auth/current-user/'), {
         credentials: 'include'
       });
       
@@ -109,7 +110,7 @@ const AdminAgents: React.FC = () => {
 
   const fetchAgents = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/agents/', {
+      const response = await fetch(getApiUrl('/api/agents/'), {
         credentials: 'include',
         headers: {
           'Accept': 'application/json',
@@ -162,7 +163,7 @@ const AdminAgents: React.FC = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/agents/categories/');
+      const response = await fetch(getApiUrl('/api/agents/categories/'));
       const data = await response.json();
       if (data.success) {
         setCategories(data.data || []); // Ensure we always set an array
@@ -175,7 +176,7 @@ const AdminAgents: React.FC = () => {
 
   const fetchTones = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/agents/tones/');
+      const response = await fetch(getApiUrl('/api/agents/tones/'));
       const data = await response.json();
       if (data.success) {
         setTones(data.data || []); // Ensure we always set an array
@@ -198,7 +199,7 @@ const AdminAgents: React.FC = () => {
         specializations: formData.specializations.split(',').map(s => s.trim()).filter(s => s)
       };
 
-      const response = await fetch('http://localhost:8000/api/agents/', {
+      const response = await fetch(getApiUrl('/api/agents/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -248,7 +249,7 @@ const AdminAgents: React.FC = () => {
         specializations: formData.specializations.split(',').map(s => s.trim()).filter(s => s)
       };
 
-      const response = await fetch(`http://localhost:8000/api/agents/${selectedAgent.id}/`, {
+              const response = await fetch(getApiUrl(`/api/agents/${selectedAgent.id}/`), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -287,7 +288,7 @@ const AdminAgents: React.FC = () => {
 
   const handleDeleteAgent = async (agent: Agent) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/agents/${agent.id}/`, {
+              const response = await fetch(getApiUrl(`/api/agents/${agent.id}/`), {
         method: 'DELETE',
         credentials: 'include'
       });
@@ -319,7 +320,7 @@ const AdminAgents: React.FC = () => {
 
   const createDefaultAgents = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/agents/create-defaults/', {
+              const response = await fetch(getApiUrl('/api/agents/create-defaults/'), {
         method: 'POST',
         credentials: 'include'
       });
