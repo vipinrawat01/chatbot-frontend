@@ -36,12 +36,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const checkCurrentUser = async () => {
     try {
+      console.log('🔍 Checking authentication status...');
       const response = await fetch(getApiUrl('/api/auth/current-user/'), {
         credentials: 'include' // Include cookies for session
       });
       
+      console.log('🔍 Auth check response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('🔍 Auth check response data:', data);
+        
         if (data.authenticated) {
           setUser(data.user);
           // Set view based on user role
@@ -53,12 +58,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           } else {
             setCurrentView('user');
           }
+          console.log('✅ User authenticated:', data.user.username);
+        } else {
+          console.log('❌ User not authenticated');
+          setUser(null);
         }
+      } else {
+        console.log('❌ Auth check failed with status:', response.status);
+        setUser(null);
       }
     } catch (error) {
-      console.error('Error checking auth status:', error);
+      console.error('❌ Error checking auth status:', error);
+      setUser(null);
+    } finally {
+      console.log('🔍 Setting isLoading to false');
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   const login = async (username: string, password: string): Promise<boolean> => {

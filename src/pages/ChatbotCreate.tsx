@@ -518,7 +518,7 @@ const ChatbotCreate = () => {
 
       // Check if chatbot exists (update) or create new
       console.log('🔍 Checking if chatbot exists:', botSettings.id);
-      const response = await fetch(`http://localhost:8000/api/chatbot-instances/${botSettings.id}/`, {
+      const response = await fetch(getApiUrl(`/api/chatbot-instances/${botSettings.id}/`), {
         credentials: 'include' // Include authentication cookies
       });
       console.log('📡 Check response:', response.status, response.ok);
