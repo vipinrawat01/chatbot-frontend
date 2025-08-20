@@ -1,5 +1,5 @@
 // API configuration and functions
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://chatbot-npll.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://chatbot-npll.onrender.com';
 
 // Knowledge Management API functions
 export const knowledgeApi = {

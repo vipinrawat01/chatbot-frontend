@@ -7,41 +7,78 @@ import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import ColorPicker from './ColorPicker';
 import BrandingOptions from './BrandingOptions';
+import { Input } from '@/components/ui/input';
+import { Palette } from 'lucide-react';
 
 interface DesignControlsProps {
-  onColorChange?: (color: string, opacity?: number) => void;
-  onUserBubbleColorChange?: (color: string, opacity?: number) => void;
-  onAgentBubbleColorChange?: (color: string, opacity?: number) => void;
-  onChatBackgroundColorChange?: (color: string, opacity?: number) => void;
-  onThemeChange?: (theme: string) => void;
-  onCornerRadiusChange?: (radius: number) => void;
-  onBubbleRadiusChange?: (radius: number) => void;
-  onBubbleStyleChange?: (style: string) => void;
-  onEffectChange?: (effect: string) => void;
-  onPositionChange?: (position: 'bottom-right' | 'bottom-left') => void;
-  onGradientToggle?: (type: string, enabled: boolean) => void;
-  onBrandingChange?: (branding: { enabled: boolean; text: string; link: string }) => void;
+  onColorChange: (color: string, opacity: number) => void;
+  onUserBubbleColorChange: (color: string, opacity: number) => void;
+  onAgentBubbleColorChange: (color: string, opacity: number) => void;
+  onChatBackgroundColorChange: (color: string, opacity: number) => void;
+  onUserTextColorChange: (color: string) => void;
+  onAgentTextColorChange: (color: string) => void;
+  onThemeChange: (theme: string) => void;
+  onCornerRadiusChange: (radius: number) => void;
+  onBubbleRadiusChange: (radius: number) => void;
+  onBubbleStyleChange: (style: string) => void;
+  onEffectChange: (effect: string) => void;
+  onPositionChange: (position: string) => void;
+  onGradientToggle: (type: string, enabled: boolean) => void;
+  onBrandingChange: (branding: { enabled: boolean; text: string; link: string }) => void;
+  onSizeChange: (dimension: 'width' | 'height', value: number) => void;
+  onBackgroundImageChange: (imageUrl: string | null) => void;
+  currentValues: {
+    cornerRadius: number;
+    bubbleRadius: number;
+    bubbleStyle: string;
+    effect: string;
+    position: string;
+    primaryColor: string;
+    userBubbleColor: string;
+    agentBubbleColor: string;
+    chatBackgroundColor: string;
+    userTextColor: string;
+    agentTextColor: string;
+    gradients: {
+      header: boolean;
+      userBubble: boolean;
+      agentBubble: boolean;
+      launcher: boolean;
+    };
+    width?: number;
+    height?: number;
+    backgroundImage?: string | null;
+  };
 }
 
-const DesignControls = ({ 
-  onColorChange, 
+const DesignControls = ({
+  onColorChange,
   onUserBubbleColorChange,
   onAgentBubbleColorChange,
   onChatBackgroundColorChange,
-  onThemeChange, 
+  onUserTextColorChange,
+  onAgentTextColorChange,
+  onThemeChange,
   onCornerRadiusChange,
   onBubbleRadiusChange,
   onBubbleStyleChange,
   onEffectChange,
   onPositionChange,
   onGradientToggle,
-  onBrandingChange
+  onBrandingChange,
+  onSizeChange,
+  onBackgroundImageChange,
+  currentValues
 }: DesignControlsProps) => {
-  const [cornerRadius, setCornerRadius] = useState(24);
-  const [bubbleRadius, setBubbleRadius] = useState(24);
-  const [bubbleStyle, setBubbleStyle] = useState('rounded');
-  const [selectedEffect, setSelectedEffect] = useState('glass');
-  const [selectedPosition, setSelectedPosition] = useState<'bottom-right' | 'bottom-left'>('bottom-right');
+  const [cornerRadius, setCornerRadius] = useState(currentValues?.cornerRadius || 24);
+  const [bubbleRadius, setBubbleRadius] = useState(currentValues?.bubbleRadius || 24);
+  const [bubbleStyle, setBubbleStyle] = useState(currentValues?.bubbleStyle || 'rounded');
+  const [selectedEffect, setSelectedEffect] = useState(currentValues?.effect || 'glass');
+  const [selectedPosition, setSelectedPosition] = useState<'bottom-right' | 'bottom-left'>(currentValues?.position || 'bottom-right');
+  const [selectedColor, setSelectedColor] = useState('primaryColor');
+  const [selectedOpacity, setSelectedOpacity] = useState(100);
+  const [backgroundImageFile, setBackgroundImageFile] = useState<File | null>(null);
+  const [backgroundImagePreview, setBackgroundImagePreview] = useState<string | null>(currentValues.backgroundImage || null);
 
   const colors = [
     { name: 'Green', value: 'bg-green-500', hex: '#10B981' },
@@ -81,13 +118,121 @@ const DesignControls = ({
     onPositionChange?.(position);
   };
 
+  const handleBackgroundImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setBackgroundImageFile(file);
+      
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setBackgroundImagePreview(result);
+        onBackgroundImageChange(result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeBackgroundImage = () => {
+    setBackgroundImageFile(null);
+    setBackgroundImagePreview(null);
+    onBackgroundImageChange(null);
+  };
+
   return (
     <div className="space-y-6">
+      {/* Size Controls */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+            </svg>
+            Size & Dimensions
+          </CardTitle>
+          <CardDescription>Customize the chatbot dimensions</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="chatbot-width">Width (px)</Label>
+              <Input
+                id="chatbot-width"
+                type="number"
+                min="280"
+                max="800"
+                step="10"
+                value={currentValues.width || 320}
+                onChange={(e) => onSizeChange('width', parseInt(e.target.value) || 320)}
+                placeholder="320"
+              />
+              <p className="text-xs text-slate-500">Min: 280px, Max: 800px</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="chatbot-height">Height (px)</Label>
+              <Input
+                id="chatbot-height"
+                type="number"
+                min="300"
+                max="600"
+                step="10"
+                value={currentValues.height || 384}
+                onChange={(e) => onSizeChange('height', parseInt(e.target.value) || 384)}
+                placeholder="384"
+              />
+              <p className="text-xs text-slate-500">Min: 300px, Max: 600px</p>
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label>Background Image</Label>
+            <div className="space-y-3">
+              {backgroundImagePreview ? (
+                <div className="relative">
+                  <img 
+                    src={backgroundImagePreview} 
+                    alt="Background preview" 
+                    className="w-full h-32 object-cover rounded-lg border"
+                  />
+                  <button
+                    onClick={removeBackgroundImage}
+                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors"
+                  >
+                    ×
+                  </button>
+                </div>
+              ) : (
+                <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:border-slate-400 transition-colors">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleBackgroundImageUpload}
+                    className="hidden"
+                    id="background-image-upload"
+                  />
+                  <label htmlFor="background-image-upload" className="cursor-pointer">
+                    <svg className="w-8 h-8 mx-auto text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <p className="text-sm text-slate-600">Click to upload background image</p>
+                    <p className="text-xs text-slate-500 mt-1">PNG, JPG, GIF up to 5MB</p>
+                  </label>
+                </div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Colors Section */}
       <Card>
         <CardHeader>
-          <CardTitle>Colors & Theme</CardTitle>
-          <CardDescription>Customize colors for different elements</CardDescription>
+          <CardTitle className="flex items-center gap-2">
+            <Palette className="w-5 h-5" />
+            Color Scheme
+          </CardTitle>
+          <CardDescription>Customize the chatbot's color palette</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Automatic Gradients - Moved above colors */}
@@ -97,26 +242,28 @@ const DesignControls = ({
               <div className="flex items-center justify-between">
                 <Label className="text-sm">Header Gradient</Label>
                 <Switch 
-                  defaultChecked 
+                  defaultChecked={currentValues?.gradients?.header ?? true}
                   onCheckedChange={(checked) => onGradientToggle?.('header', checked)}
                 />
               </div>
               <div className="flex items-center justify-between">
                 <Label className="text-sm">Launcher Gradient</Label>
                 <Switch 
-                  defaultChecked 
+                  defaultChecked={currentValues?.gradients?.launcher ?? true}
                   onCheckedChange={(checked) => onGradientToggle?.('launcher', checked)}
                 />
               </div>
               <div className="flex items-center justify-between">
                 <Label className="text-sm">User Bubble Gradient</Label>
                 <Switch 
+                  defaultChecked={currentValues?.gradients?.userBubble ?? false}
                   onCheckedChange={(checked) => onGradientToggle?.('userBubble', checked)}
                 />
               </div>
               <div className="flex items-center justify-between">
                 <Label className="text-sm">Agent Bubble Gradient</Label>
                 <Switch 
+                  defaultChecked={currentValues?.gradients?.agentBubble ?? false}
                   onCheckedChange={(checked) => onGradientToggle?.('agentBubble', checked)}
                 />
               </div>
@@ -128,26 +275,43 @@ const DesignControls = ({
             <ColorPicker
               title="Header & Launcher Color"
               onColorChange={onColorChange}
-              defaultOpacity={100}
+              currentColor={currentValues?.primaryColor}
             />
             <ColorPicker
               title="User Bubble Color"
               onColorChange={onUserBubbleColorChange}
-              defaultOpacity={90}
+              currentColor={currentValues?.userBubbleColor}
             />
           </div>
-          <div className="grid grid-cols-2 gap-6">
-            <ColorPicker
-              title="Agent Bubble Color"
-              onColorChange={onAgentBubbleColorChange}
-              defaultOpacity={85}
-            />
-            <ColorPicker
-              title="Chat Background Color"
-              onColorChange={onChatBackgroundColorChange}
-              defaultOpacity={80}
-            />
-          </div>
+                     <div className="grid grid-cols-2 gap-6">
+             <ColorPicker
+               title="Agent Bubble Color"
+               onColorChange={onAgentBubbleColorChange}
+               currentColor={currentValues?.agentBubbleColor}
+             />
+             <ColorPicker
+               title="Chat Background Color"
+               onColorChange={onChatBackgroundColorChange}
+               currentColor={currentValues?.chatBackgroundColor}
+             />
+           </div>
+           
+           {/* Text Colors */}
+           <div className="space-y-4">
+             <h4 className="font-medium">Text Colors</h4>
+             <div className="grid grid-cols-2 gap-6">
+               <ColorPicker
+                 title="User Text Color"
+                 onColorChange={onUserTextColorChange}
+                 currentColor={currentValues?.userTextColor}
+               />
+               <ColorPicker
+                 title="Agent Text Color"
+                 onColorChange={onAgentTextColorChange}
+                 currentColor={currentValues?.agentTextColor}
+               />
+             </div>
+           </div>
         </CardContent>
       </Card>
 

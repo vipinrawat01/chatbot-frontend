@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 // API configuration
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://chatbot-npll.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://chatbot-npll.onrender.com';
 const getApiUrl = (endpoint: string) => `${API_BASE_URL}${endpoint}`;
 import Layout from '@/components/layout/Layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -13,9 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Bot, Palette, Image, Database, Bell, Save, Code2, Copy, Check, ArrowLeft } from 'lucide-react';
-import ChatbotPreview from '@/components/chatbot/ChatbotPreview';
 import DesignControls from '@/components/chatbot/DesignControls';
 import KnowledgeOptions from '@/components/chatbot/KnowledgeOptions';
+import ChatbotPreview from '@/components/chatbot/ChatbotPreview';
 import ChatbotEmbedModal from '@/components/ChatbotEmbedModal';
 import { useToast } from '@/hooks/use-toast';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
@@ -64,6 +64,8 @@ const ChatbotCreate = () => {
     agentBubbleOpacity: 85,
     chatBackgroundColor: 'bg-slate-500',
     chatBackgroundOpacity: 80,
+    userTextColor: '#FFFFFF',
+    agentTextColor: '#FFFFFF',
     theme: 'modern',
     icon: '🤖',
     cornerRadius: 24,
@@ -73,6 +75,9 @@ const ChatbotCreate = () => {
     position: 'bottom-right' as 'bottom-right' | 'bottom-left',
     type: 'FLOATING_WIDGET' as 'FLOATING_WIDGET' | 'EMBEDDED_WINDOW',
     size: 'medium' as 'small' | 'medium' | 'large',
+    width: 320,
+    height: 384,
+    backgroundImage: null as string | null,
     branding: {
       enabled: true,
       text: 'Powered by Your Company',
@@ -100,8 +105,17 @@ const ChatbotCreate = () => {
 
   // Load existing chatbot data when editing
   useEffect(() => {
+    console.log('🔍 Edit useEffect triggered:', { isEditing, editId, user: !!user });
     if (isEditing && editId && user) {
+      console.log('✅ Loading chatbot data for editing:', editId);
       loadChatbotData(editId);
+    } else {
+      console.log('❌ Not loading chatbot data:', { 
+        isEditing, 
+        editId, 
+        hasUser: !!user,
+        reason: !isEditing ? 'not editing' : !editId ? 'no editId' : !user ? 'no user' : 'unknown'
+      });
     }
   }, [isEditing, editId, user]);
 
@@ -174,20 +188,41 @@ const ChatbotCreate = () => {
   const loadChatbotData = async (chatbotId: string) => {
     setLoading(true);
     try {
+      console.log(`🔄 Loading chatbot data for ID: ${chatbotId}`);
+      
       // Try to load from API first
               const response = await fetch(getApiUrl(`/api/chatbot-instances/${chatbotId}/`), {
         credentials: 'include' // Include authentication cookies
       });
+      
+      console.log(`📡 API response status: ${response.status}`);
+      
       if (response.ok) {
-        const chatbot = await response.json();
-        convertApiDataToBotSettings(chatbot.data);
+        const result = await response.json();
+        console.log('📋 API response:', result);
+        
+        // Handle the API response structure correctly
+        if (result.success && result.data) {
+          console.log('✅ Successfully loaded chatbot data:', result.data);
+          convertApiDataToBotSettings(result.data);
+        } else if (result.success && !result.data) {
+          // Direct response without data wrapper
+          console.log('✅ Direct chatbot data:', result);
+          convertApiDataToBotSettings(result);
       } else {
+          console.error('❌ Invalid API response structure:', result);
+          throw new Error('Invalid API response structure');
+        }
+      } else {
+        console.error(`❌ API error: ${response.status} ${response.statusText}`);
+        
         // Fallback to localStorage
         const saved = localStorage.getItem('savedChatbots');
         if (saved) {
           const savedBots = JSON.parse(saved);
           const existingBot = savedBots.find((bot: any) => bot.id === chatbotId);
           if (existingBot) {
+            console.log('📦 Loading from localStorage fallback');
             setBotSettings(existingBot);
             toast({
               title: "Chatbot loaded",
@@ -196,10 +231,12 @@ const ChatbotCreate = () => {
           } else {
             throw new Error('Chatbot not found');
           }
+        } else {
+          throw new Error(`API returned ${response.status}: ${response.statusText}`);
         }
       }
     } catch (error) {
-      console.error('Error loading chatbot:', error);
+      console.error('❌ Error loading chatbot:', error);
       toast({
         title: "Failed to load chatbot",
         description: "Could not load the chatbot data.",
@@ -213,57 +250,103 @@ const ChatbotCreate = () => {
     // Convert API response format to botSettings format
     console.log('🔄 Loading chatbot data:', apiData);
     
-    // If we have the new configuration structure, use it directly
-    if (apiData.configuration && typeof apiData.configuration === 'object') {
-      const config = apiData.configuration;
+    // Check if we have the new configuration structure (either nested or direct)
+    const config = apiData.configuration || apiData;
+    console.log('🔍 Checking configuration structure:', {
+      hasConfiguration: !!apiData.configuration,
+      hasDirectConfig: !apiData.configuration && apiData.primaryColor,
+      configKeys: Object.keys(config)
+    });
+    
+    // If we have the new configuration structure (either nested or direct), use it
+    if (config && (apiData.configuration || config.primaryColor)) {
       console.log('✅ Using new configuration structure:', config);
       
-      // Convert hex colors back to Tailwind classes for frontend use
+      // Enhanced hex to Tailwind color mapping
       const hexToTailwind = (hexColor: string) => {
         const hexMap: { [key: string]: string } = {
-          '#10B981': 'bg-green-500',
-          '#34D399': 'bg-green-400',
-          '#059669': 'bg-green-600',
-          '#3B82F6': 'bg-blue-500',
-          '#60A5FA': 'bg-blue-400',
-          '#2563EB': 'bg-blue-600',
-          '#8B5CF6': 'bg-purple-500',
-          '#A78BFA': 'bg-purple-400',
-          '#7C3AED': 'bg-purple-600',
-          '#F97316': 'bg-orange-500',
-          '#FB923C': 'bg-orange-400',
-          '#EA580C': 'bg-orange-600',
-          '#EF4444': 'bg-red-500',
-          '#F87171': 'bg-red-400',
-          '#DC2626': 'bg-red-600',
-          '#EC4899': 'bg-pink-500',
-          '#F472B6': 'bg-pink-400',
-          '#DB2777': 'bg-pink-600',
-          '#6366F1': 'bg-indigo-500',
-          '#818CF8': 'bg-indigo-400',
-          '#4F46E5': 'bg-indigo-600',
-          '#14B8A6': 'bg-teal-500',
-          '#2DD4BF': 'bg-teal-400',
-          '#0D9488': 'bg-teal-600',
-          '#6B7280': 'bg-gray-500',
-          '#9CA3AF': 'bg-gray-400',
-          '#4B5563': 'bg-gray-600',
-          '#64748B': 'bg-slate-500',
-          '#94A3B8': 'bg-slate-400',
-          '#475569': 'bg-slate-600',
-          '#F8FAFC': 'bg-slate-50',
-          '#F9FAFB': 'bg-gray-50',
-          '#EFF6FF': 'bg-blue-50',
-          '#ECFDF5': 'bg-green-50'
+          // Black and White
+          '#000000': 'bg-black', '#FFFFFF': 'bg-white',
+          
+          // Green shades
+          '#10B981': 'bg-green-500', '#34D399': 'bg-green-400', '#059669': 'bg-green-600',
+          '#22C55E': 'bg-green-500', '#4ADE80': 'bg-green-400', '#16A34A': 'bg-green-600',
+          '#15803D': 'bg-green-700', '#166534': 'bg-green-800', '#14532D': 'bg-green-900',
+          
+          // Blue shades
+          '#3B82F6': 'bg-blue-500', '#60A5FA': 'bg-blue-400', '#2563EB': 'bg-blue-600',
+          '#1D4ED8': 'bg-blue-700', '#1E40AF': 'bg-blue-800', '#1E3A8A': 'bg-blue-900',
+          '#0EA5E9': 'bg-sky-500', '#38BDF8': 'bg-sky-400', '#0284C7': 'bg-sky-600',
+          
+          // Purple shades
+          '#8B5CF6': 'bg-purple-500', '#A78BFA': 'bg-purple-400', '#7C3AED': 'bg-purple-600',
+          '#581C87': 'bg-purple-800', '#3B0764': 'bg-purple-900',
+          
+          // Orange shades
+          '#F97316': 'bg-orange-500', '#FB923C': 'bg-orange-400', '#EA580C': 'bg-orange-600',
+          '#C2410C': 'bg-orange-700', '#9A3412': 'bg-orange-800',
+          
+          // Red shades
+          '#EF4444': 'bg-red-500', '#F87171': 'bg-red-400', '#DC2626': 'bg-red-600',
+          '#B91C1C': 'bg-red-700', '#991B1B': 'bg-red-800', '#7F1D1D': 'bg-red-900',
+          
+          // Pink shades
+          '#EC4899': 'bg-pink-500', '#F472B6': 'bg-pink-400', '#DB2777': 'bg-pink-600',
+          '#BE185D': 'bg-pink-700', '#9D174D': 'bg-pink-800', '#831843': 'bg-pink-900',
+          
+          // Indigo shades
+          '#6366F1': 'bg-indigo-500', '#818CF8': 'bg-indigo-400', '#4F46E5': 'bg-indigo-600',
+          '#4338CA': 'bg-indigo-700', '#3730A3': 'bg-indigo-800', '#312E81': 'bg-indigo-900',
+          
+          // Teal shades
+          '#14B8A6': 'bg-teal-500', '#2DD4BF': 'bg-teal-400', '#0D9488': 'bg-teal-600',
+          '#0F766E': 'bg-teal-700', '#115E59': 'bg-teal-800', '#134E4A': 'bg-teal-900',
+          
+          // Gray shades
+          '#6B7280': 'bg-gray-500', '#9CA3AF': 'bg-gray-400', '#4B5563': 'bg-gray-600',
+          '#374151': 'bg-gray-700', '#1F2937': 'bg-gray-800', '#111827': 'bg-gray-900',
+          
+          // Slate shades
+          '#64748B': 'bg-slate-500', '#94A3B8': 'bg-slate-400', '#475569': 'bg-slate-600',
+          '#334155': 'bg-slate-700', '#1E293B': 'bg-slate-800', '#0F172A': 'bg-slate-900',
+          
+          // Light backgrounds
+          '#F8FAFC': 'bg-slate-50', '#F9FAFB': 'bg-gray-50', '#EFF6FF': 'bg-blue-50',
+          '#ECFDF5': 'bg-green-50', '#FEF3C7': 'bg-amber-50', '#FDF2F8': 'bg-pink-50',
+          '#F5F3FF': 'bg-violet-50', '#F0F9FF': 'bg-sky-50',
+          
+          // Additional colors
+          '#F59E0B': 'bg-amber-500', '#FBBF24': 'bg-amber-400', '#D97706': 'bg-amber-600',
+          '#84CC16': 'bg-lime-500', '#A3E635': 'bg-lime-400', '#65A30D': 'bg-lime-600',
+          '#06B6D4': 'bg-cyan-500', '#22D3EE': 'bg-cyan-400', '#0891B2': 'bg-cyan-600',
+          '#F43F5E': 'bg-rose-500', '#FB7185': 'bg-rose-400', '#E11D48': 'bg-rose-600'
         };
-        return hexMap[hexColor] || 'bg-green-500'; // Default fallback
+        
+        // Handle case-insensitive hex colors
+        const normalizedHex = hexColor?.toUpperCase();
+        const mappedColor = hexMap[normalizedHex];
+        
+        if (mappedColor) {
+          console.log(`🎨 Mapped hex color ${hexColor} to ${mappedColor}`);
+          return mappedColor;
+        }
+        
+        console.warn(`⚠️ Unknown hex color: ${hexColor}, using default`);
+        return 'bg-green-500'; // Default fallback
       };
       
+      console.log('🎨 Converting colors from configuration:', {
+        primaryColor: config.primaryColor,
+        userBubbleColor: config.userBubbleColor,
+        agentBubbleColor: config.agentBubbleColor,
+        chatBackgroundColor: config.chatBackgroundColor
+      });
+      
       setBotSettings({
-        id: apiData.id,
+        id: config.id || apiData.id,
         name: config.name || 'AI Assistant',
         welcomeMessage: config.welcomeMessage || 'Hello! How can I help you today?',
-        agent_id: apiData.agent_id || null, // Add agent_id from API data
+        agent_id: config.agent_id || apiData.agent_id || null,
         
         // Convert hex colors back to Tailwind for frontend controls
         primaryColor: hexToTailwind(config.primaryColor) || 'bg-green-500',
@@ -274,6 +357,8 @@ const ChatbotCreate = () => {
         agentBubbleOpacity: config.agentBubbleOpacity || 85,
         chatBackgroundColor: hexToTailwind(config.chatBackgroundColor) || 'bg-slate-500',
         chatBackgroundOpacity: config.chatBackgroundOpacity || 80,
+        userTextColor: config.userTextColor || '#FFFFFF',
+        agentTextColor: config.agentTextColor || '#FFFFFF',
         
         // Layout settings
         theme: config.theme || 'modern',
@@ -285,6 +370,9 @@ const ChatbotCreate = () => {
         position: config.position || 'bottom-right',
         type: apiData.type || 'FLOATING_WIDGET',
         size: apiData.size || 'medium',
+        width: config.width || 320,
+        height: config.height || 384,
+        backgroundImage: config.backgroundImage || null,
         
         // Branding and gradients
         branding: {
@@ -299,6 +387,9 @@ const ChatbotCreate = () => {
           launcher: config.gradients?.launcher ?? true
         }
       });
+      
+      console.log('✅ Successfully converted configuration to bot settings');
+      
     } else {
       // Legacy format - convert from old uiSettings structure
       console.log('⚠️ Using legacy configuration structure');
@@ -319,6 +410,8 @@ const ChatbotCreate = () => {
         agentBubbleOpacity: uiSettings.agentBubbleOpacity || 85,
         chatBackgroundColor: uiSettings.chatBackgroundColor || 'bg-slate-500',
         chatBackgroundOpacity: uiSettings.chatBackgroundOpacity || 80,
+        userTextColor: uiSettings.userTextColor || '#FFFFFF',
+        agentTextColor: uiSettings.agentTextColor || '#FFFFFF',
         
         // Layout settings
         theme: uiSettings.theme || 'modern',
@@ -330,6 +423,9 @@ const ChatbotCreate = () => {
         position: uiSettings.position || 'bottom-right',
         type: apiData.type || 'FLOATING_WIDGET',
         size: uiSettings.size || 'medium',
+        width: uiSettings.width || 320,
+        height: uiSettings.height || 384,
+        backgroundImage: uiSettings.backgroundImage || null,
         
         // Branding and gradients
         branding: {
@@ -344,6 +440,8 @@ const ChatbotCreate = () => {
           launcher: uiSettings.gradients?.launcher ?? true
         }
       });
+      
+      console.log('✅ Successfully converted legacy configuration to bot settings');
     }
     
     toast({
@@ -364,6 +462,20 @@ const ChatbotCreate = () => {
     }));
   };
 
+  const handleUserTextColorChange = (color: string) => {
+    setBotSettings(prev => ({
+      ...prev,
+      userTextColor: color
+    }));
+  };
+
+  const handleAgentTextColorChange = (color: string) => {
+    setBotSettings(prev => ({
+      ...prev,
+      agentTextColor: color
+    }));
+  };
+
   const handleGradientToggle = (type: string, enabled: boolean) => {
     setBotSettings(prev => ({
       ...prev,
@@ -381,6 +493,29 @@ const ChatbotCreate = () => {
     }));
   };
 
+  const handleSizeChange = (dimension: 'width' | 'height', value: number) => {
+    // Ensure value is a valid number and within bounds
+    const validValue = Math.max(
+      dimension === 'width' ? 280 : 300,
+      Math.min(
+        dimension === 'width' ? 800 : 600,
+        value || (dimension === 'width' ? 320 : 384)
+      )
+    );
+    
+    setBotSettings(prev => ({
+      ...prev,
+      [dimension]: validValue
+    }));
+  };
+
+  const handleBackgroundImageChange = (imageUrl: string | null) => {
+    setBotSettings(prev => ({
+      ...prev,
+      backgroundImage: imageUrl
+    }));
+  };
+
   const handleIconSelect = (selectedIcon: string) => {
     handleSettingChange('icon', selectedIcon);
   };
@@ -388,6 +523,10 @@ const ChatbotCreate = () => {
   // Helper function to convert Tailwind colors to hex - COMPREHENSIVE
   const convertTailwindToHex = (tailwindColor: string) => {
     const colorMap: { [key: string]: string } = {
+      // Black and White
+      'bg-black': '#000000',
+      'bg-white': '#FFFFFF',
+      
       // Green shades
       'bg-green-500': '#10B981',
       'bg-green-400': '#34D399',
@@ -489,6 +628,9 @@ const ChatbotCreate = () => {
         bubbleStyle: botSettings.bubbleStyle,
         effect: botSettings.effect,
         position: botSettings.position,
+        width: botSettings.width || 320,
+        height: botSettings.height || 384,
+        backgroundImage: botSettings.backgroundImage,
         branding: {
           enabled: botSettings.branding.enabled,
           text: botSettings.branding.text,
@@ -574,6 +716,8 @@ const ChatbotCreate = () => {
         });
         
         console.log('✅ Saved quietly with exact config structure:', exactConfig);
+        console.log('🖼️ Background image saved:', botSettings.backgroundImage);
+        console.log('🔍 Full botSettings being saved:', botSettings);
         
         // DO NOT show code snippet popup
       } else {
@@ -629,6 +773,9 @@ const ChatbotCreate = () => {
         bubbleStyle: botSettings.bubbleStyle,
         effect: botSettings.effect,
         position: botSettings.position,
+        width: botSettings.width || 320,
+        height: botSettings.height || 384,
+        backgroundImage: botSettings.backgroundImage,
         branding: {
           enabled: botSettings.branding.enabled,
           text: botSettings.branding.text,
@@ -716,6 +863,8 @@ const ChatbotCreate = () => {
         });
         
         console.log('✅ Saved with exact config structure:', exactConfig);
+        console.log('🖼️ Background image saved:', botSettings.backgroundImage);
+        console.log('🔍 Full botSettings being saved:', botSettings);
         
         // Show code snippet popup after successful save
         setShowCodeSnippet(true);
@@ -1059,6 +1208,8 @@ const ChatbotCreate = () => {
                   onUserBubbleColorChange={(color, opacity) => handleColorChange('userBubbleColor', color, opacity || 90)}
                   onAgentBubbleColorChange={(color, opacity) => handleColorChange('agentBubbleColor', color, opacity || 85)}
                   onChatBackgroundColorChange={(color, opacity) => handleColorChange('chatBackgroundColor', color, opacity || 80)}
+                  onUserTextColorChange={handleUserTextColorChange}
+                  onAgentTextColorChange={handleAgentTextColorChange}
                   onThemeChange={(theme) => handleSettingChange('theme', theme)}
                   onCornerRadiusChange={(radius) => handleSettingChange('cornerRadius', radius)}
                   onBubbleRadiusChange={(radius) => handleSettingChange('bubbleRadius', radius)}
@@ -1067,6 +1218,25 @@ const ChatbotCreate = () => {
                   onPositionChange={(position) => handleSettingChange('position', position)}
                   onGradientToggle={handleGradientToggle}
                   onBrandingChange={handleBrandingChange}
+                  onSizeChange={(dimension, value) => handleSizeChange(dimension, value)}
+                  onBackgroundImageChange={handleBackgroundImageChange}
+                  currentValues={{
+                    cornerRadius: botSettings.cornerRadius,
+                    bubbleRadius: botSettings.bubbleRadius,
+                    bubbleStyle: botSettings.bubbleStyle,
+                    effect: botSettings.effect,
+                    position: botSettings.position,
+                    primaryColor: botSettings.primaryColor,
+                    userBubbleColor: botSettings.userBubbleColor,
+                    agentBubbleColor: botSettings.agentBubbleColor,
+                    chatBackgroundColor: botSettings.chatBackgroundColor,
+                    userTextColor: botSettings.userTextColor,
+                    agentTextColor: botSettings.agentTextColor,
+                                         gradients: botSettings.gradients,
+                     width: botSettings.width,
+                     height: botSettings.height,
+                     backgroundImage: botSettings.backgroundImage
+                  }}
                 />
                 
                 {/* Save button for Design tab */}
@@ -1197,19 +1367,33 @@ const ChatbotCreate = () => {
             </Tabs>
           </div>
 
-            {/* Right Panel - Preview */}
+                        {/* Right Panel - Empty for Chatbot Preview */}
             <div className="w-96">
               <div className="sticky top-8">
                 <Card>
-              <CardHeader>
+                  <CardHeader>
                     <CardTitle className="flex items-center">
                       <Bot className="w-5 h-5 mr-2 text-green-600" />
-                  Live Preview
-                </CardTitle>
-              </CardHeader>
+                      Preview Area
+                    </CardTitle>
+                  </CardHeader>
                   <CardContent>
-                    <div className="relative h-96 bg-slate-100 rounded-lg overflow-hidden">
-        <ChatbotPreview 
+                    <div className="h-96 bg-slate-100 rounded-lg border-2 border-dashed border-slate-300 flex items-center justify-center">
+                      <div className="text-center text-slate-500">
+                        <Bot className="w-16 h-16 mx-auto mb-4 text-slate-400" />
+                        <p className="text-sm">Chatbot preview appears on the page</p>
+                        <p className="text-xs mt-1">Look for the icon in the corner</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Chatbot Preview - Renders directly on the page like a real website */}
+        <ChatbotPreview
           chatbotId={botSettings.id}
           botName={botSettings.name}
           welcomeMessage={botSettings.welcomeMessage}
@@ -1221,6 +1405,8 @@ const ChatbotCreate = () => {
           agentBubbleOpacity={botSettings.agentBubbleOpacity}
           chatBackgroundColor={botSettings.chatBackgroundColor}
           chatBackgroundOpacity={botSettings.chatBackgroundOpacity}
+          userTextColor={botSettings.userTextColor}
+          agentTextColor={botSettings.agentTextColor}
           theme={botSettings.theme}
           icon={botSettings.icon}
           cornerRadius={botSettings.cornerRadius}
@@ -1230,14 +1416,10 @@ const ChatbotCreate = () => {
           position={botSettings.position}
           branding={botSettings.branding}
           gradients={botSettings.gradients}
+          width={botSettings.width}
+          height={botSettings.height}
+          backgroundImage={botSettings.backgroundImage}
         />
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Advanced Embed Modal */}
         <ChatbotEmbedModal

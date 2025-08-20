@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Auth Debug</title>
+</head>
+<body>
+    <h1>Authentication Debug</h1>
+    <button onclick="testAuth()">Test Authentication</button>
+    <button onclick="testLogin()">Test Login</button>
+    <button onclick="testAgents()">Test Agents</button>
+    <div id="output"></div>
+
+    <script>
+        const API_BASE_URL = 'https://chatbot-npll.onrender.com';
+        
+        function log(message) {
+            console.log(message);
+            document.getElementById('output').innerHTML += '<p>' + message + '</p>';
+        }
+
+        async function testAuth() {
+            log('🔍 Testing authentication...');
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/auth/current-user/`, {
+                    credentials: 'include'
+                });
+                log(`Status: ${response.status}`);
+                const data = await response.json();
+                log(`Data: ${JSON.stringify(data, null, 2)}`);
+            } catch (error) {
+                log(`Error: ${error.message}`);
+            }
+        }
+
+        async function testLogin() {
+            log('🔐 Testing login...');
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/auth/login/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username: 'user1', password: 'demo123' }),
+                    credentials: 'include'
+                });
+                log(`Status: ${response.status}`);
+                const data = await response.json();
+                log(`Data: ${JSON.stringify(data, null, 2)}`);
+            } catch (error) {
+                log(`Error: ${error.message}`);
+            }
+        }
+
+        async function testAgents() {
+            log('🤖 Testing agents...');
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/agents/for-selection/`, {
+                    credentials: 'include'
+                });
+                log(`Status: ${response.status}`);
+                const data = await response.json();
+                log(`Data: ${JSON.stringify(data, null, 2)}`);
+            } catch (error) {
+                log(`Error: ${error.message}`);
+            }
+        }
+    </script>
+</body>
+</html> 

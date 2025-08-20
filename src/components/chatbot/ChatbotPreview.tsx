@@ -7,35 +7,40 @@ import { knowledgeApi } from '@/lib/api';
 import { useSearchParams } from 'react-router-dom';
 
 interface ChatbotPreviewProps {
-  chatbotId?: string;
-  botName?: string;
-  welcomeMessage?: string;
-  primaryColor?: string;
-  primaryOpacity?: number;
-  userBubbleColor?: string;
-  userBubbleOpacity?: number;
-  agentBubbleColor?: string;
-  agentBubbleOpacity?: number;
-  chatBackgroundColor?: string;
-  chatBackgroundOpacity?: number;
-  theme?: string;
-  icon?: string;
-  cornerRadius?: number;
-  bubbleRadius?: number;
-  bubbleStyle?: string;
-  effect?: string;
-  position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
-  branding?: {
+  chatbotId: string;
+  botName: string;
+  welcomeMessage: string;
+  primaryColor: string;
+  primaryOpacity: number;
+  userBubbleColor: string;
+  userBubbleOpacity: number;
+  agentBubbleColor: string;
+  agentBubbleOpacity: number;
+  chatBackgroundColor: string;
+  chatBackgroundOpacity: number;
+  userTextColor: string;
+  agentTextColor: string;
+  theme: string;
+  icon: string;
+  cornerRadius: number;
+  bubbleRadius: number;
+  bubbleStyle: string;
+  effect: string;
+  position: 'bottom-right' | 'bottom-left';
+  branding: {
     enabled: boolean;
     text: string;
     link: string;
   };
-  gradients?: {
-    header?: boolean;
-    userBubble?: boolean;
-    agentBubble?: boolean;
-    launcher?: boolean;
+  gradients: {
+    header: boolean;
+    userBubble: boolean;
+    agentBubble: boolean;
+    launcher: boolean;
   };
+  width?: number;
+  height?: number;
+  backgroundImage?: string | null;
 }
 
 interface ChatMessage {
@@ -46,27 +51,32 @@ interface ChatMessage {
   chunks_used?: number;
 }
 
-const ChatbotPreview = ({ 
+const ChatbotPreview = ({
   chatbotId,
-  botName = "AI Assistant", 
-  welcomeMessage = "Hello! How can I help you today?",
-  primaryColor = "bg-green-500",
-  primaryOpacity = 100,
-  userBubbleColor = "bg-blue-500",
-  userBubbleOpacity = 90,
-  agentBubbleColor = "bg-gray-500",
-  agentBubbleOpacity = 85,
-  chatBackgroundColor = "bg-slate-500",
-  chatBackgroundOpacity = 80,
-  theme = "modern",
-  icon = "🤖",
-  cornerRadius = 24,
-  bubbleRadius = 24,
-  bubbleStyle = "rounded",
-  effect = "glass",
-  position = "bottom-right",
-  branding = { enabled: true, text: "Powered by Your Company", link: "" },
-  gradients = { header: true, launcher: true }
+  botName,
+  welcomeMessage,
+  primaryColor,
+  primaryOpacity,
+  userBubbleColor,
+  userBubbleOpacity,
+  agentBubbleColor,
+  agentBubbleOpacity,
+  chatBackgroundColor,
+  chatBackgroundOpacity,
+  userTextColor,
+  agentTextColor,
+  theme,
+  icon,
+  cornerRadius,
+  bubbleRadius,
+  bubbleStyle,
+  effect,
+  position,
+  branding,
+  gradients,
+  width = 320,
+  height = 384,
+  backgroundImage
 }: ChatbotPreviewProps) => {
   const [searchParams] = useSearchParams();
   const [sessionId] = useState(() => `preview-session-${Date.now()}`);
@@ -160,7 +170,7 @@ const ChatbotPreview = ({
     }
   };
 
-  const convertColorWithOpacity = (tailwindColor: string, opacity: number) => {
+  const convertTailwindToHex = (tailwindColor: string) => {
     const colorMap: { [key: string]: string } = {
       'bg-green-500': '#10B981',
       'bg-blue-500': '#3B82F6',
@@ -174,7 +184,34 @@ const ChatbotPreview = ({
       'bg-slate-500': '#64748B'
     };
     
-    const hex = colorMap[tailwindColor] || '#10B981';
+    return colorMap[tailwindColor] || tailwindColor;
+  };
+
+  const convertColorWithOpacity = (color: string, opacity: number) => {
+    // If it's already a hex color, use it directly
+    if (color.startsWith('#')) {
+      const r = parseInt(color.slice(1, 3), 16);
+      const g = parseInt(color.slice(3, 5), 16);
+      const b = parseInt(color.slice(5, 7), 16);
+      const alpha = opacity / 100;
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+    
+    // If it's a Tailwind class, convert it
+    const colorMap: { [key: string]: string } = {
+      'bg-green-500': '#10B981',
+      'bg-blue-500': '#3B82F6',
+      'bg-purple-500': '#8B5CF6',
+      'bg-orange-500': '#F97316',
+      'bg-red-500': '#EF4444',
+      'bg-pink-500': '#EC4899',
+      'bg-indigo-500': '#6366F1',
+      'bg-teal-500': '#14B8A6',
+      'bg-gray-500': '#6B7280',
+      'bg-slate-500': '#64748B'
+    };
+    
+    const hex = colorMap[color] || '#10B981';
     const alpha = opacity / 100;
     
     const r = parseInt(hex.slice(1, 3), 16);
@@ -313,41 +350,50 @@ const ChatbotPreview = ({
   };
 
   const getChatBackgroundStyle = () => {
-    const bgColor = convertColorWithOpacity(chatBackgroundColor, chatBackgroundOpacity);
+    let baseStyle = '';
     
-    switch(effect) {
-      case 'glass':
-        return { 
-          backgroundColor: bgColor,
-          backdropFilter: 'blur(16px)',
-          border: '1px solid rgba(255, 255, 255, 0.1)'
-        };
-      case 'glass-tinted':
-        return { 
-          backgroundColor: bgColor,
-          backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255, 255, 255, 0.2)'
-        };
-      case 'solid':
-        return { backgroundColor: '#0F172A' };
-      case 'solid-colored':
-        return { backgroundColor: bgColor };
-      case 'bubbles':
-        return { 
-          background: `linear-gradient(135deg, ${bgColor}, rgba(15, 23, 42, 0.3), rgba(30, 41, 59, 0.4))`,
-          backdropFilter: 'blur(12px)'
-        };
-      case 'liquid':
-        return { 
-          background: `linear-gradient(135deg, ${bgColor}, rgba(15, 23, 42, 0.2), rgba(30, 41, 59, 0.25))`,
-          backdropFilter: 'blur(16px)'
-        };
-      default:
-        return { 
-          backgroundColor: bgColor,
-          backdropFilter: 'blur(16px)'
-        };
+    // Debug logging
+    console.log('🎨 Background Debug:', {
+      backgroundImage,
+      chatBackgroundColor,
+      effect,
+      primaryColor
+    });
+    
+    if (backgroundImage) {
+      baseStyle = `background-image: url('${backgroundImage}'); background-size: cover; background-position: center; background-repeat: no-repeat;`;
+      console.log('🖼️ Background image style:', baseStyle);
     }
+    
+    const colorStyle = `background-color: ${convertTailwindToHex(chatBackgroundColor)};`;
+    console.log('🎨 Background color style:', colorStyle);
+    
+    let result = '';
+    switch (effect) {
+      case 'glass':
+        result = `${baseStyle} ${colorStyle} backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.1);`;
+        break;
+      case 'glass-tinted':
+        result = `${baseStyle} ${colorStyle} backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.2);`;
+        break;
+      case 'solid':
+        result = `${baseStyle} background-color: #0F172A;`;
+        break;
+      case 'solid-colored':
+        result = `${baseStyle} ${colorStyle}`;
+        break;
+      case 'bubbles':
+        result = `${baseStyle} background: linear-gradient(135deg, ${convertTailwindToHex(primaryColor)}CC, rgba(147, 51, 234, 0.6)); backdrop-filter: blur(16px); border: 1px solid ${convertTailwindToHex(primaryColor)}4D;`;
+        break;
+      case 'liquid':
+        result = `${baseStyle} background: linear-gradient(135deg, ${convertTailwindToHex(chatBackgroundColor)}, rgba(15, 23, 42, 0.2), rgba(30, 41, 59, 0.25)); backdrop-filter: blur(16px);`;
+        break;
+      default:
+        result = `${baseStyle} ${colorStyle} backdrop-filter: blur(16px);`;
+    }
+    
+    console.log('🎨 Final background style:', result);
+    return result;
   };
 
   const getEffectStyles = () => {
@@ -484,140 +530,252 @@ const ChatbotPreview = ({
   }
 
   return (
-    <div 
-      className={`fixed ${getPositionStyles()} z-50 w-80 h-96 overflow-hidden animate-scale-in flex flex-col`}
-      style={{ 
-        borderRadius: `${cornerRadius}px`,
-        ...getChatBackgroundStyle()
-      }}
-    >
-      {/* Header - Fixed at top with background and glass effect */}
+    <>
+      {/* Chatbot Container - positioned like it would be on a real website */}
       <div 
-        className="p-4 flex items-center justify-between flex-shrink-0 relative z-10"
-        style={getHeaderStyle()}
+        className="chatbot-container"
+        style={{
+          position: 'fixed',
+          [position.includes('right') ? 'right' : 'left']: '24px',
+          [position.includes('bottom') ? 'bottom' : 'top']: '24px',
+          zIndex: 9999
+        }}
       >
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-            <span className="text-lg">{icon}</span>
-          </div>
-          <div className="flex flex-col">
-            <h3 className="text-white font-semibold text-sm leading-tight">{botName}</h3>
-            <div className="text-white/80 text-xs flex items-center gap-1">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span>Online</span>
-            </div>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsOpen(false)}
-            className="text-white hover:bg-white/20 h-8 w-8 p-0 transition-all duration-200"
-          >
-            <Minimize2 className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsOpen(false)}
-            className="text-white hover:bg-white/20 h-8 w-8 p-0 transition-all duration-200"
-          >
-            <X className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
-
-      {/* Messages - Scrollable middle section */}
-      <div className="flex-1 p-4 space-y-4 overflow-y-auto scrollbar-hide">
-        {messages.map((message, index) => (
-          <div
-            key={index}
-            className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'} opacity-0 animate-fade-in`}
-            style={{ 
-              animationDelay: `${index * 0.1}s`,
-              animationFillMode: 'forwards'
+          {/* Launcher Button - always visible */}
+          <button 
+            className="chatbot-launcher"
+            style={{
+              width: '64px',
+              height: '64px',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+              border: 'none',
+              color: 'white',
+              background: gradients.launcher 
+                ? `linear-gradient(to right, ${convertTailwindToHex(primaryColor)}, ${convertColorWithOpacity(convertTailwindToHex(primaryColor), Math.min(100, primaryOpacity + 10))})`
+                : convertTailwindToHex(primaryColor)
             }}
+            onClick={() => setIsOpen(!isOpen)}
           >
-            <div className="flex flex-col max-w-[80%]">
-              <div
-                className={getBubbleStyles(message.type)}
+            <span style={{ fontSize: '24px' }}>{icon}</span>
+          </button>
+
+          {/* Chat Widget - only visible when open */}
+          {isOpen && (
+            <div 
+              className="chatbot-widget"
+              style={{
+                width: `${width}px`,
+                height: `${height}px`,
+                overflow: 'hidden',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                display: 'flex',
+                flexDirection: 'column',
+                borderRadius: `${cornerRadius}px`,
+                // Use separate background properties for better compatibility
+                backgroundImage: backgroundImage ? `url('${backgroundImage}')` : 'none',
+                backgroundSize: backgroundImage ? 'cover' : 'auto',
+                backgroundPosition: backgroundImage ? 'center' : 'initial',
+                backgroundRepeat: backgroundImage ? 'no-repeat' : 'initial',
+                backgroundColor: convertTailwindToHex(chatBackgroundColor),
+                backdropFilter: effect.includes('glass') || effect === 'liquid' || effect === 'bubbles' ? 'blur(16px)' : 'none',
+                // Add effect-specific styling
+                ...(effect === 'glass' && { border: '1px solid rgba(255, 255, 255, 0.1)' }),
+                ...(effect === 'glass-tinted' && { border: '1px solid rgba(255, 255, 255, 0.2)' }),
+                ...(effect === 'solid' && { 
+                  backgroundColor: '#0F172A',
+                  // Preserve background image even for solid effect
+                  backgroundImage: backgroundImage ? `url('${backgroundImage}')` : 'none',
+                  backgroundSize: backgroundImage ? 'cover' : 'auto',
+                  backgroundPosition: backgroundImage ? 'center' : 'auto',
+                  backgroundRepeat: backgroundImage ? 'no-repeat' : 'auto'
+                }),
+                ...(effect === 'bubbles' && { 
+                  // For bubbles effect, we need to layer the background image over the gradient
+                  background: `linear-gradient(135deg, ${convertTailwindToHex(primaryColor)}CC, rgba(147, 51, 234, 0.6)), ${backgroundImage ? `url('${backgroundImage}')` : 'none'}`,
+                  backgroundSize: backgroundImage ? 'cover' : 'auto',
+                  backgroundPosition: backgroundImage ? 'center' : 'auto',
+                  backgroundRepeat: backgroundImage ? 'no-repeat' : 'auto',
+                  border: `1px solid ${convertTailwindToHex(primaryColor)}4D`
+                }),
+                ...(effect === 'liquid' && { 
+                  // For liquid effect, layer the background image over the gradient
+                  background: `linear-gradient(135deg, ${convertTailwindToHex(chatBackgroundColor)}, rgba(15, 23, 42, 0.2), rgba(30, 41, 59, 0.25)), ${backgroundImage ? `url('${backgroundImage}')` : 'none'}`,
+                  backgroundSize: backgroundImage ? 'cover' : 'auto',
+                  backgroundPosition: backgroundImage ? 'center' : 'auto',
+                  backgroundRepeat: backgroundImage ? 'no-repeat' : 'auto'
+                }),
+                position: 'absolute',
+                bottom: '80px',
+                [position.includes('right') ? 'right' : 'left']: '0'
+              }}
+            >
+              {/* Header */}
+              <div 
+                className="chatbot-header"
                 style={{
-                  borderRadius: `${bubbleRadius}px`,
-                  ...(message.type === 'user' ? getUserBubbleStyle() : getAgentBubbleStyle())
+                  color: 'white',
+                  padding: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexShrink: 0,
+                  position: 'relative',
+                  zIndex: 10,
+                  background: gradients.header 
+                    ? `linear-gradient(to right, ${convertTailwindToHex(primaryColor)}, ${convertColorWithOpacity(convertTailwindToHex(primaryColor), Math.min(100, primaryOpacity + 10))})`
+                    : convertTailwindToHex(primaryColor),
+                  borderRadius: `${cornerRadius}px ${cornerRadius}px 0 0`,
+                  ...(getHeaderStyle() || {})
                 }}
               >
-                <p className="text-sm">{message.text}</p>
-                {bubbleStyle === 'tail' && message.type === 'user' && (
-                  <div className="absolute right-0 top-1/2 transform translate-x-2 -translate-y-1/2 w-0 h-0 border-l-8 border-r-0 border-t-8 border-b-8 border-l-current border-t-transparent border-b-transparent"></div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                    <span className="text-lg">{icon}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <h3 className="text-white font-semibold text-sm leading-tight">{botName}</h3>
+                    <div className="text-white/80 text-xs flex items-center gap-1">
+                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                      <span>Online</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsOpen(false)}
+                    className="text-white hover:bg-white/20 h-8 w-8 p-0 transition-all duration-200"
+                  >
+                    <Minimize2 className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsOpen(false)}
+                    className="text-white hover:bg-white/20 h-8 w-8 p-0 transition-all duration-200"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Messages */}
+              <div 
+                className="chatbot-messages"
+                style={{
+                  flex: 1,
+                  overflowY: 'auto',
+                  padding: '16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '16px',
+                  scrollbarWidth: 'none',
+                  msOverflowStyle: 'none'
+                }}
+              >
+                {messages.map((message, index) => (
+                  <div
+                    key={index}
+                    className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'} opacity-0 animate-fade-in`}
+                    style={{ 
+                      animationDelay: `${index * 0.1}s`,
+                      animationFillMode: 'forwards'
+                    }}
+                  >
+                    <div className="flex flex-col max-w-[80%]">
+                      <div
+                        className={getBubbleStyles(message.type)}
+                        style={{
+                          borderRadius: `${bubbleRadius}px`,
+                          ...(message.type === 'user' ? getUserBubbleStyle() : getAgentBubbleStyle())
+                        }}
+                      >
+                        <p className="text-sm" style={{ color: message.type === 'user' ? userTextColor : agentTextColor }}>{message.text}</p>
+                        {bubbleStyle === 'tail' && message.type === 'user' && (
+                          <div className="absolute right-0 top-1/2 transform translate-x-2 -translate-y-1/2 w-0 h-0 border-l-8 border-r-0 border-t-8 border-b-8 border-l-current border-t-transparent border-b-transparent"></div>
+                        )}
+                        {bubbleStyle === 'tail' && message.type === 'bot' && (
+                          <div className="absolute left-0 top-1/2 transform -translate-x-2 -translate-y-1/2 w-0 h-0 border-r-8 border-l-0 border-t-8 border-b-8 border-r-current border-t-transparent border-b-transparent"></div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {isTyping && (
+                  <div className="flex justify-start opacity-0 animate-fade-in" style={{ animationFillMode: 'forwards' }}>
+                    <div
+                      className={getBubbleStyles('bot')}
+                      style={{
+                        borderRadius: `${bubbleRadius}px`,
+                        ...getAgentBubbleStyle()
+                      }}
+                    >
+                      <TypingIndicator />
+                    </div>
+                  </div>
                 )}
-                {bubbleStyle === 'tail' && message.type === 'bot' && (
-                  <div className="absolute left-0 top-1/2 transform -translate-x-2 -translate-y-1/2 w-0 h-0 border-r-8 border-l-0 border-t-8 border-b-8 border-r-current border-t-transparent border-b-transparent"></div>
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Input Area */}
+              <div 
+                className="chatbot-input-area"
+                style={{
+                  padding: '16px',
+                  flexShrink: 0,
+                  ...getFooterStyle()
+                }}
+              >
+                <div className="flex gap-2">
+                  <Input
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    placeholder="Ask about your knowledge base..."
+                    className={`flex-1 ${getInputStyles()} focus:ring-2 focus:ring-${primaryColor.replace('bg-', '').replace('-500', '')}-500/50 transition-all duration-200`}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                  />
+                  <Button
+                    onClick={handleSendMessage}
+                    size="sm"
+                    className="hover:scale-105 transition-all duration-200 shadow-lg"
+                    style={getUserBubbleStyle()}
+                  >
+                    <Send className="w-4 h-4" />
+                  </Button>
+                </div>
+                
+                {branding?.enabled && (
+                  <div className="mt-2 text-center">
+                    {branding.link ? (
+                      <a 
+                        href={branding.link} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-xs text-white/60 hover:text-white/80 hover:underline transition-colors"
+                      >
+                        {branding.text}
+                      </a>
+                    ) : (
+                      <span className="text-xs text-white/60">
+                        {branding.text}
+                      </span>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
-          </div>
-        ))}
-        {isTyping && (
-          <div className="flex justify-start opacity-0 animate-fade-in" style={{ animationFillMode: 'forwards' }}>
-            <div
-              className={getBubbleStyles('bot')}
-              style={{
-                borderRadius: `${bubbleRadius}px`,
-                ...getAgentBubbleStyle()
-              }}
-            >
-              <TypingIndicator />
-            </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Footer - Fixed at bottom with background and glass effect */}
-      <div 
-        className="p-4 flex-shrink-0"
-        style={getFooterStyle()}
-      >
-        <div className="flex gap-2">
-          <Input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Ask about your knowledge base..."
-            className={`flex-1 ${getInputStyles()} focus:ring-2 focus:ring-${primaryColor.replace('bg-', '').replace('-500', '')}-500/50 transition-all duration-200`}
-            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-          />
-          <Button
-            onClick={handleSendMessage}
-            size="sm"
-            className="hover:scale-105 transition-all duration-200 shadow-lg"
-            style={getUserBubbleStyle()}
-          >
-            <Send className="w-4 h-4" />
-          </Button>
+          )}
         </div>
-        
-        {branding?.enabled && (
-          <div className="mt-2 text-center">
-            {branding.link ? (
-              <a 
-                href={branding.link} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-xs text-white/60 hover:text-white/80 hover:underline transition-colors"
-              >
-                {branding.text}
-              </a>
-            ) : (
-              <span className="text-xs text-white/60">
-                {branding.text}
-              </span>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
+      </>
+    );
+  };
 
 export default ChatbotPreview;

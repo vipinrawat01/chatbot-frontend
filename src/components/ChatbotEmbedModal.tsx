@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 
 // API configuration
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://chatbot-npll.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://chatbot-npll.onrender.com';
 const getApiUrl = (endpoint: string) => `${API_BASE_URL}${endpoint}`;
 import { Copy, Check, X, Code, ExternalLink, Globe, FileText, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
