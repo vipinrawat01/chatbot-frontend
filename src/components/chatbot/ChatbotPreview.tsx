@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Bot, X, Minimize2, MessageCircle, Sparkles } from 'lucide-react';
+import { Send, Bot, X, Minimize2, MessageCircle, Sparkles, Mic, MicOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -41,6 +41,10 @@ interface ChatbotPreviewProps {
   width?: number;
   height?: number;
   backgroundImage?: string | null;
+  // Voice message settings
+  voiceEnabled?: boolean;
+  voiceButtonColor?: string;
+  voiceButtonOpacity?: number;
 }
 
 interface ChatMessage {
@@ -76,7 +80,10 @@ const ChatbotPreview = ({
   gradients,
   width = 320,
   height = 384,
-  backgroundImage
+  backgroundImage,
+  voiceEnabled,
+  voiceButtonColor,
+  voiceButtonOpacity
 }: ChatbotPreviewProps) => {
   const [searchParams] = useSearchParams();
   const [sessionId] = useState(() => `preview-session-${Date.now()}`);
@@ -89,6 +96,10 @@ const ChatbotPreview = ({
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Voice message state
+  const [isListening, setIsListening] = useState(false);
+  const [recognition, setRecognition] = useState<any>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -106,67 +117,130 @@ const ChatbotPreview = ({
   }, [welcomeMessage]);
 
   const handleSendMessage = async () => {
-    if (!inputValue.trim()) return;
-    
-    const newUserMessage: ChatMessage = { 
-      type: 'user', 
-      text: inputValue, 
-      timestamp: new Date() 
-    };
-    setMessages(prev => [...prev, newUserMessage]);
-    
-    const userInput = inputValue;
+    if (!inputValue.trim() || isTyping) return;
+
+    const userMessage = inputValue.trim();
     setInputValue('');
+    setMessages(prev => [...prev, { type: 'user', text: userMessage, timestamp: new Date() }]);
     setIsTyping(true);
     
-    // Always try real AI agent API first
     try {
-      if (!chatbotId) {
-        throw new Error('No chatbot ID provided');
-      }
-      
-      const response = await knowledgeApi.chatWithKnowledge(chatbotId, userInput, sessionId);
-      
-      setIsTyping(false);
-      const botResponse: ChatMessage = { 
+      const response = await knowledgeApi.chatWithKnowledge(chatbotId, userMessage, sessionId);
+      if (response.success) {
+        const botResponse = response.response;
+        setMessages(prev => [...prev, { 
         type: 'bot', 
-        text: response.response,
+          text: botResponse, 
         timestamp: new Date(),
         knowledge_used: response.knowledge_used,
         chunks_used: response.chunks_used
-      };
-      setMessages(prev => [...prev, botResponse]);
-      return;
-    } catch (error: any) {
-      console.error('AI agent error in preview:', error);
-      
-      // If API fails, show helpful message based on error type
-      setIsTyping(false);
-      let errorMessage = "I'm having trouble connecting. Please try again.";
-      
-      if (error.message === 'No chatbot ID provided') {
-        errorMessage = "Please save your chatbot first before testing the chat functionality.";
-      } else if (error.response?.status === 404) {
-        errorMessage = "Chatbot not found. Please save your chatbot first.";
-      } else if (error.response?.status === 500) {
-        const errorData = error.response?.data;
-        if (errorData?.error?.includes('API key')) {
-          errorMessage = "AI service is not configured. Please ensure API keys are set in the backend.";
-        } else {
-          errorMessage = "Server error. Please check if the backend is running properly.";
+        }]);
+        
+        // Auto-speak the bot response if voice is enabled
+        if (voiceEnabled) {
+          speakText(botResponse);
         }
-      } else if (!navigator.onLine) {
-        errorMessage = "No internet connection. Please check your network.";
+      } else {
+        setMessages(prev => [...prev, { 
+          type: 'bot', 
+          text: 'Sorry, I encountered an error. Please try again.', 
+          timestamp: new Date() 
+        }]);
       }
-      
-      const errorResponse: ChatMessage = { 
+    } catch (error) {
+      setMessages(prev => [...prev, { 
         type: 'bot', 
-        text: errorMessage,
-        timestamp: new Date(),
-        knowledge_used: false,
-        chunks_used: 0
+        text: 'Sorry, I encountered an error. Please try again.', 
+        timestamp: new Date() 
+      }]);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  // Voice message functions
+  const startSpeechRecognition = () => {
+    if (!voiceEnabled) return;
+    
+    try {
+      // Use Web Speech API for speech recognition
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert('Speech recognition not supported in this browser. Please use Chrome or Edge.');
+        return;
+      }
+
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+              recognition.onstart = () => {
+          setIsListening(true);
+        };
+
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        
+        // Auto-send the transcribed text
+        setInputValue(transcript);
+        setTimeout(() => {
+          handleSendMessage();
+        }, 100);
       };
-      setMessages(prev => [...prev, errorResponse]);
+
+      recognition.onerror = (event: any) => {
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      // Auto-stop after 3 seconds of silence
+      setTimeout(() => {
+        if (isListening) {
+          recognition.stop();
+        }
+      }, 3000);
+
+      recognition.start();
+      setRecognition(recognition);
+      
+    } catch (error) {
+      alert('Could not start speech recognition. Please check permissions.');
+    }
+  };
+
+  const stopSpeechRecognition = () => {
+    if (recognition && isListening) {
+      recognition.stop();
+      setIsListening(false);
+    }
+  };
+
+  const toggleVoiceInput = () => {
+    if (isListening) {
+      stopSpeechRecognition();
+    } else {
+      startSpeechRecognition();
+    }
+  };
+
+  // Text-to-Speech function
+  const speakText = (text: string) => {
+    if (!voiceEnabled) return;
+    
+    try {
+      if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.9;
+        utterance.pitch = 1;
+        utterance.volume = 0.8;
+        speechSynthesis.speak(utterance);
+      }
+    } catch (error) {
+      // Silent error handling for TTS
     }
   };
 
@@ -352,21 +426,11 @@ const ChatbotPreview = ({
   const getChatBackgroundStyle = () => {
     let baseStyle = '';
     
-    // Debug logging
-    console.log('🎨 Background Debug:', {
-      backgroundImage,
-      chatBackgroundColor,
-      effect,
-      primaryColor
-    });
-    
     if (backgroundImage) {
       baseStyle = `background-image: url('${backgroundImage}'); background-size: cover; background-position: center; background-repeat: no-repeat;`;
-      console.log('🖼️ Background image style:', baseStyle);
     }
     
     const colorStyle = `background-color: ${convertTailwindToHex(chatBackgroundColor)};`;
-    console.log('🎨 Background color style:', colorStyle);
     
     let result = '';
     switch (effect) {
@@ -392,7 +456,6 @@ const ChatbotPreview = ({
         result = `${baseStyle} ${colorStyle} backdrop-filter: blur(16px);`;
     }
     
-    console.log('🎨 Final background style:', result);
     return result;
   };
 
@@ -742,6 +805,26 @@ const ChatbotPreview = ({
                     className={`flex-1 ${getInputStyles()} focus:ring-2 focus:ring-${primaryColor.replace('bg-', '').replace('-500', '')}-500/50 transition-all duration-200`}
                     onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                   />
+                  {/* Voice Button - only show if voice is enabled */}
+                  {voiceEnabled && (
+                    <Button
+                      onClick={toggleVoiceInput}
+                      size="sm"
+                      className="hover:scale-105 transition-all duration-200 shadow-lg"
+                      style={{
+                        background: voiceButtonColor?.includes('bg-') 
+                          ? `var(--${voiceButtonColor.replace('bg-', '')}-color, ${voiceButtonColor})`
+                          : voiceButtonColor || '#3B82F6',
+                        opacity: (voiceButtonOpacity || 90) / 100
+                      }}
+                    >
+                      {isListening ? (
+                        <MicOff className="w-4 h-4 text-white" />
+                      ) : (
+                        <Mic className="w-4 h-4 text-white" />
+                      )}
+                    </Button>
+                  )}
                   <Button
                     onClick={handleSendMessage}
                     size="sm"

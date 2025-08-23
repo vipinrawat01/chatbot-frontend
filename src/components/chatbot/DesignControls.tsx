@@ -27,6 +27,8 @@ interface DesignControlsProps {
   onBrandingChange: (branding: { enabled: boolean; text: string; link: string }) => void;
   onSizeChange: (dimension: 'width' | 'height', value: number) => void;
   onBackgroundImageChange: (imageUrl: string | null) => void;
+  onVoiceToggle: (enabled: boolean) => void;
+  onVoiceButtonColorChange: (color: string, opacity: number) => void;
   currentValues: {
     cornerRadius: number;
     bubbleRadius: number;
@@ -48,6 +50,9 @@ interface DesignControlsProps {
     width?: number;
     height?: number;
     backgroundImage?: string | null;
+    voiceEnabled?: boolean;
+    voiceButtonColor?: string;
+    voiceButtonOpacity?: number;
   };
 }
 
@@ -68,6 +73,8 @@ const DesignControls = ({
   onBrandingChange,
   onSizeChange,
   onBackgroundImageChange,
+  onVoiceToggle,
+  onVoiceButtonColorChange,
   currentValues
 }: DesignControlsProps) => {
   const [cornerRadius, setCornerRadius] = useState(currentValues?.cornerRadius || 24);
@@ -522,6 +529,42 @@ const DesignControls = ({
               </Select>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Voice Message Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Voice Message Settings</CardTitle>
+          <CardDescription>Customize the voice message button appearance</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <Label>Enable Voice Messages</Label>
+            <Switch 
+              defaultChecked={currentValues?.voiceEnabled ?? false}
+              onCheckedChange={(checked) => onVoiceToggle?.(checked)}
+            />
+          </div>
+          {currentValues?.voiceEnabled && (
+            <div className="grid grid-cols-2 gap-6">
+              <ColorPicker
+                title="Voice Button Color"
+                onColorChange={(color, opacity) => onVoiceButtonColorChange(color, opacity)}
+                currentColor={currentValues?.voiceButtonColor}
+              />
+              <div className="space-y-3">
+                <Label>Voice Button Opacity</Label>
+                <Slider 
+                  value={[currentValues?.voiceButtonOpacity || 100]} 
+                  onValueChange={(value) => onVoiceButtonColorChange(currentValues?.voiceButtonColor || '', value[0])}
+                  max={100} 
+                  step={10} 
+                  className="w-full" 
+                />
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

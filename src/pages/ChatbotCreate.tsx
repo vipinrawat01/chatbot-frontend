@@ -78,6 +78,10 @@ const ChatbotCreate = () => {
     width: 320,
     height: 384,
     backgroundImage: null as string | null,
+    // Voice message settings
+    voiceEnabled: false,
+    voiceButtonColor: 'bg-blue-500',
+    voiceButtonOpacity: 90,
     branding: {
       enabled: true,
       text: 'Powered by Your Company',
@@ -374,6 +378,11 @@ const ChatbotCreate = () => {
         height: config.height || 384,
         backgroundImage: config.backgroundImage || null,
         
+        // Voice message settings
+        voiceEnabled: config.voiceEnabled || false,
+        voiceButtonColor: hexToTailwind(config.voiceButtonColor) || 'bg-blue-500',
+        voiceButtonOpacity: config.voiceButtonOpacity || 90,
+        
         // Branding and gradients
         branding: {
           enabled: config.branding?.enabled ?? true,
@@ -426,6 +435,11 @@ const ChatbotCreate = () => {
         width: uiSettings.width || 320,
         height: uiSettings.height || 384,
         backgroundImage: uiSettings.backgroundImage || null,
+        
+        // Voice message settings
+        voiceEnabled: uiSettings.voiceEnabled || false,
+        voiceButtonColor: uiSettings.voiceButtonColor || 'bg-blue-500',
+        voiceButtonOpacity: uiSettings.voiceButtonOpacity || 90,
         
         // Branding and gradients
         branding: {
@@ -641,7 +655,11 @@ const ChatbotCreate = () => {
           userBubble: botSettings.gradients.userBubble,
           agentBubble: botSettings.gradients.agentBubble,
           launcher: botSettings.gradients.launcher
-        }
+        },
+        // Voice message settings
+        voiceEnabled: botSettings.voiceEnabled,
+        voiceButtonColor: convertTailwindToHex(botSettings.voiceButtonColor),
+        voiceButtonOpacity: botSettings.voiceButtonOpacity
       };
 
       // Prepare data for backend API with new configuration structure
@@ -786,7 +804,11 @@ const ChatbotCreate = () => {
           userBubble: botSettings.gradients.userBubble,
           agentBubble: botSettings.gradients.agentBubble,
           launcher: botSettings.gradients.launcher
-        }
+        },
+        // Voice message settings
+        voiceEnabled: botSettings.voiceEnabled,
+        voiceButtonColor: convertTailwindToHex(botSettings.voiceButtonColor),
+        voiceButtonOpacity: botSettings.voiceButtonOpacity
       };
 
       // Prepare data for backend API with new configuration structure
@@ -1220,6 +1242,8 @@ const ChatbotCreate = () => {
                   onBrandingChange={handleBrandingChange}
                   onSizeChange={(dimension, value) => handleSizeChange(dimension, value)}
                   onBackgroundImageChange={handleBackgroundImageChange}
+                  onVoiceToggle={(enabled) => handleSettingChange('voiceEnabled', enabled)}
+                  onVoiceButtonColorChange={(color, opacity) => handleColorChange('voiceButtonColor', color, opacity || 90)}
                   currentValues={{
                     cornerRadius: botSettings.cornerRadius,
                     bubbleRadius: botSettings.bubbleRadius,
@@ -1232,10 +1256,13 @@ const ChatbotCreate = () => {
                     chatBackgroundColor: botSettings.chatBackgroundColor,
                     userTextColor: botSettings.userTextColor,
                     agentTextColor: botSettings.agentTextColor,
-                                         gradients: botSettings.gradients,
-                     width: botSettings.width,
-                     height: botSettings.height,
-                     backgroundImage: botSettings.backgroundImage
+                    gradients: botSettings.gradients,
+                    width: botSettings.width,
+                    height: botSettings.height,
+                    backgroundImage: botSettings.backgroundImage,
+                    voiceEnabled: botSettings.voiceEnabled,
+                    voiceButtonColor: botSettings.voiceButtonColor,
+                    voiceButtonOpacity: botSettings.voiceButtonOpacity
                   }}
                 />
                 
@@ -1419,6 +1446,9 @@ const ChatbotCreate = () => {
           width={botSettings.width}
           height={botSettings.height}
           backgroundImage={botSettings.backgroundImage}
+          voiceEnabled={botSettings.voiceEnabled}
+          voiceButtonColor={botSettings.voiceButtonColor}
+          voiceButtonOpacity={botSettings.voiceButtonOpacity}
         />
 
         {/* Advanced Embed Modal */}
